@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoiceVibe AI – हिंदी और English Text to Speech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#10151f;--card:#18202e;--line:#2a3548;--text:#f3efe6;--mute:#9aa6b8;--acc:#ff9f1c;--ok:#2ec4b6;--bad:#ff6b6b;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Mukta,system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:680px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+h1{font-size:1.5rem;font-weight:800;margin:0}
+h2{font-size:1.1rem;margin:0 0 10px}
+.badge{padding:4px 12px;border-radius:99px;font-size:.85rem;border:1px solid var(--line);color:var(--mute)}
+.badge.pro{border-color:var(--acc);color:var(--acc);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+textarea,select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:1rem}
+textarea{min-height:140px;resize:vertical}
+textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+label{display:block;font-size:.9rem;color:var(--mute);margin:12px 0 4px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:130px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;cursor:pointer}
+.seg button.on{border-color:var(--acc);background:#2a2113;color:var(--acc);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.val{float:right;color:var(--text)}
+.btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--acc);color:#1a1200;font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;margin-top:14px}
+.btn.alt{background:transparent;border:1px solid var(--line);color:var(--text);font-weight:600;margin-top:8px}
+.btn:disabled{opacity:.5;cursor:wait}
+.msg{margin-top:10px;font-size:.92rem;color:var(--mute);min-height:1.3em}
+.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+.meter{height:8px;background:var(--bg);border-radius:99px;overflow:hidden;margin:8px 0}
+.meter i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.plan{border:1px solid var(--line);border-radius:12px;padding:12px;font-size:.92rem}
+.plan.pro{border-color:var(--acc)}
+.plan b{display:block;font-size:1.05rem;margin-bottom:4px}
+.plan ul{margin:6px 0 0;padding-left:18px;color:var(--mute)}
+audio{width:100%;margin-top:12px}
+dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:14px;max-width:420px;width:calc(100% - 32px)}
+dialog::backdrop{background:#000a}
+footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:24px}
+footer a{color:var(--mute)}
+@media(max-width:480px){.plans{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>VoiceVibe AI</h1>
+    <span class="badge" id="planBadge">फ्री प्लान</span>
+  </header>
+
+  <section class="card">
+    <h2>अपना टेक्स्ट लिखें</h2>
+    <textarea id="text" aria-label="टेक्स्ट" placeholder="यहाँ हिंदी या English में लिखें…">नमस्ते! VoiceVibe AI में आपका स्वागत है। अपना टेक्स्ट यहाँ लिखें और स्वाभाविक आवाज़ में सुनें।</textarea>
+    <div class="seg" style="margin-top:12px" id="langSeg">
+      <button data-v="hi-IN" class="on">हिन्दी</button>
+      <button data-v="en-US">US English</button>
+    </div>
+    <label>आवाज़ का तरीका</label>
+    <div class="seg" id="modeSeg">
+      <button data-v="ai" class="on">AI Natural (Gemini)</button>
+      <button data-v="device">Device (अनलिमिटेड)</button>
+    </div>
+    <div id="aiOpts">
+      <label for="voice">AI आवाज़</label>
+      <select id="voice">
+        <option value="Kore">Kore – Warm & Melodic (महिला)</option>
+        <option value="Zephyr">Zephyr – Smooth & Confident (पुरुष)</option>
+        <option value="Puck">Puck – Youthful & Energetic (पुरुष)</option>
+        <option value="Fenrir">Fenrir – Deep & Resonant (पुरुष)</option>
+        <option value="Charon">Charon – Calm & Reflective (पुरुष)</option>
+      </select>
+    </div>
+    <label>स्पीड <span class="val" id="rateV">1.0×</span></label>
+    <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+    <label>पिच <span class="val" id="pitchV">1.0</span></label>
+    <input type="range" id="pitch" min="0.5" max="1.8" step="0.1" value="1">
+    <button class="btn" id="go">बोलकर सुनाएँ</button>
+    <button class="btn alt" id="stop" hidden>रोकें</button>
+    <div class="msg" id="msg"></div>
+    <audio id="player" controls hidden></audio>
+    <button class="btn alt" id="dl" hidden>WAV डाउनलोड करें</button>
+  </section>
+
+  <section class="card">
+    <h2>आज की लिमिट</h2>
+    <div id="usageTxt">–</div>
+    <div class="meter"><i id="bar"></i></div>
+    <div class="msg">Device मोड पर कोई लिमिट नहीं है। लिमिट रोज़ रात 12 बजे रीसेट होती है।</div>
+  </section>
+
+  <section class="card" id="plansCard">
+    <h2>प्रीमियम प्लान</h2>
+    <div class="plans">
+      <div class="plan"><b>फ्री</b>₹0
+        <ul><li>रोज़ 3 AI आवाज़ें</li><li>500 अक्षर तक</li><li>Device आवाज़ अनलिमिटेड</li></ul></div>
+      <div class="plan pro"><b>प्रीमियम</b>₹<span id="price">99</span> / महीना
+        <ul><li>रोज़ 100 AI आवाज़ें</li><li>5000 अक्षर तक</li><li>सभी आवाज़ें</li></ul></div>
+    </div>
+    <button class="btn" id="buy">प्रीमियम लें</button>
+    <div class="msg" id="buyMsg"></div>
+  </section>
+
+  <footer>
+    <a href="#" id="privacy">Privacy Policy</a> · <a href="#" id="about">About</a>
+  </footer>
+</div>
+
+<dialog id="dlg"><div id="dlgBody"></div><button class="btn alt" onclick="document.getElementById('dlg').close()">बंद करें</button></dialog>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+/* ====== यहाँ अपनी सेटिंग बदलें ====== */
+const CFG = {
+  FREE_DAILY: 3,          // फ्री यूज़र: रोज़ AI आवाज़ें
+  PRO_DAILY: 100,         // प्रीमियम: रोज़ AI आवाज़ें
+  FREE_CHARS: 500,
+  PRO_CHARS: 5000,
+  PRICE_RS: 99,           // प्रीमियम कीमत (₹)
+  PRO_DAYS: 30,           // प्रीमियम कितने दिन चले
+  RAZORPAY_KEY: "rzp_test_XXXXXXXXXXXX", // अपनी Razorpay Key ID डालें
+  TTS_URL: "/.netlify/functions/tts"      // Gemini सर्वर फ़ंक्शन का पता
+};
+/* ===================================== */
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+const today = () => new Date().toISOString().slice(0,10);
+let lang = "hi-IN", mode = "ai", wavUrl = null;
+
+function isPro(){ return Number(store.get("vv_pro_until")||0) > Date.now(); }
+function used(){ return store.get("vv_day")===today() ? Number(store.get("vv_used")||0) : 0; }
+function limit(){ return isPro() ? CFG.PRO_DAILY : CFG.FREE_DAILY; }
+function charLimit(){ return isPro() ? CFG.PRO_CHARS : CFG.FREE_CHARS; }
+
+function refresh(){
+  const pro = isPro();
+  $("planBadge").textContent = pro ? "प्रीमियम" : "फ्री प्लान";
+  $("planBadge").className = "badge" + (pro ? " pro" : "");
+  $("usageTxt").textContent = `AI आवाज़ें: ${used()} / ${limit()} इस्तेमाल हुईं`;
+  $("bar").style.width = Math.min(100, used()/limit()*100) + "%";
+  $("price").textContent = CFG.PRICE_RS;
+  $("buy").textContent = pro ? "प्रीमियम बढ़ाएँ" : "प्रीमियम लें";
+  $("text").maxLength = charLimit();
+}
+function say(t, cls){ $("msg").textContent = t; $("msg").className = "msg " + (cls||""); }
+
+function segment(id, cb){
+  $(id).addEventListener("click", e => {
+    const b = e.target.closest("button"); if(!b) return;
+    [...$(id).children].forEach(x => x.classList.toggle("on", x===b));
+    cb(b.dataset.v);
+  });
+}
+segment("langSeg", v => lang = v);
+segment("modeSeg", v => { mode = v; $("aiOpts").hidden = v==="device"; });
+$("rate").oninput = () => $("rateV").textContent = Number($("rate").value).toFixed(1) + "×";
+$("pitch").oninput = () => $("pitchV").textContent = Number($("pitch").value).toFixed(1);
+
+function speakDevice(text){
+  if(!("speechSynthesis" in window)){ say("इस ब्राउज़र में Device आवाज़ उपलब्ध नहीं है।", "err"); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang; u.rate = Number($("rate").value); u.pitch = Number($("pitch").value);
+  const v = speechSynthesis.getVoices().find(x => x.lang === lang) || speechSynthesis.getVoices().find(x => x.lang.startsWith(lang.slice(0,2)));
+  if(v) u.voice = v;
+  u.onend = () => { $("stop").hidden = true; say("पूरा हुआ।", "ok"); };
+  $("stop").hidden = false; say("बोल रहा है…");
+  speechSynthesis.speak(u);
+}
+
+async function speakAI(text){
+  if(used() >= limit()){
+    say(isPro() ? "आज की प्रीमियम लिमिट खत्म। कल फिर आएँ या Device मोड इस्तेमाल करें." : "आज की फ्री लिमिट खत्म। प्रीमियम लें या Device मोड इस्तेमाल करें।", "err");
+    return;
+  }
+  say("AI आवाज़ बन रही है…");
+  const r = await fetch(CFG.TTS_URL, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ text, voice: $("voice").value, lang, rate: Number($("rate").value), pitch: Number($("pitch").value) })
+  });
+  if(!r.ok) throw new Error("server " + r.status);
+  const data = await r.json();               // {audio: "<base64 WAV>"}
+  if(!data.audio) throw new Error("no audio");
+  store.set("vv_day", today()); store.set("vv_used", String(used()+1));
+  wavUrl = "data:audio/wav;base64," + data.audio;
+  $("player").src = wavUrl; $("player").hidden = false; $("dl").hidden = false;
+  $("player").play().catch(()=>{});
+  say("तैयार! चलाएँ या डाउनलोड करें।", "ok");
+  refresh();
+}
+
+$("go").onclick = async () => {
+  const text = $("text").value.trim();
+  if(!text){ say("पहले कुछ टेक्स्ट लिखें।", "err"); return; }
+  if(text.length > charLimit()){ say(`इस प्लान में अधिकतम ${charLimit()} अक्षर हैं।`, "err"); return; }
+  $("go").disabled = true;
+  try{
+    if(mode==="device") speakDevice(text); else await speakAI(text);
+  }catch(e){
+    say("AI आवाज़ अभी नहीं मिल पाई, इसलिए Device आवाज़ में सुना रहा हूँ।", "err");
+    speakDevice(text);
+  }finally{ $("go").disabled = false; }
+};
+$("stop").onclick = () => { speechSynthesis.cancel(); $("stop").hidden = true; say("रोक दिया।"); };
+$("dl").onclick = () => { const a = document.createElement("a"); a.href = wavUrl; a.download = "voicevibe.wav"; a.click(); };
+
+$("buy").onclick = () => {
+  if(typeof Razorpay === "undefined"){ $("buyMsg").textContent = "पेमेंट सिस्टम लोड नहीं हुआ। इंटरनेट जाँचकर दोबारा कोशिश करें।"; $("buyMsg").className="msg err"; return; }
+  if(CFG.RAZORPAY_KEY.includes("XXXX")){ $("buyMsg").textContent = "पहले कोड में अपनी Razorpay Key ID डालें (CFG.RAZORPAY_KEY)।"; $("buyMsg").className="msg err"; return; }
+  new Razorpay({
+    key: CFG.RAZORPAY_KEY,
+    amount: CFG.PRICE_RS * 100,
+    currency: "INR",
+    name: "VoiceVibe AI",
+    description: `प्रीमियम ${CFG.PRO_DAYS} दिन`,
+    theme: { color: "#ff9f1c" },
+    handler: resp => {
+      const base = Math.max(Date.now(), Number(store.get("vv_pro_until")||0));
+      store.set("vv_pro_until", String(base + CFG.PRO_DAYS*86400000));
+      store.set("vv_last_payment", resp.razorpay_payment_id);
+      $("buyMsg").textContent = "पेमेंट सफल! प्रीमियम चालू हो गया।"; $("buyMsg").className = "msg ok";
+      refresh();
+    }
+  }).open();
+};
+
+function info(title, html){ $("dlgBody").innerHTML = `<h2>${title}</h2>${html}`; $("dlg").showModal(); }
+$("privacy").onclick = e => { e.preventDefault(); info("Privacy Policy", "<p>आपका टेक्स्ट सिर्फ़ आवाज़ बनाने के लिए इस्तेमाल होता है और हम उसे सेव नहीं करते। पेमेंट Razorpay के ज़रिए होता है; हम आपके कार्ड की जानकारी नहीं रखते। लिमिट गिनने के लिए आपके ब्राउज़र में छोटा डेटा सेव होता है।</p>"); };
+$("about").onclick = e => { e.preventDefault(); info("About", "<p>VoiceVibe AI हिंदी और अंग्रेज़ी टेक्स्ट को प्राकृतिक आवाज़ में बदलने वाला टूल है। संपर्क: अपना ईमेल यहाँ लिखें।</p>"); };
+
+refresh();
+</script>
+</body>
+</html>
